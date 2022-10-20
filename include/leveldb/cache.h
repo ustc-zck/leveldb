@@ -23,6 +23,7 @@
 
 namespace leveldb {
 
+//这个前置声明是干嘛的。。
 class Cache;
 
 // Create a new cache with a fixed size capacity.  This implementation

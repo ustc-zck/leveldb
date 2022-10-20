@@ -58,6 +58,8 @@ class DB {
   // Set the database entry for "key" to "value".  Returns OK on success,
   // and a non-OK status on error.
   // Note: consider setting options.sync = true.
+  
+  // DB类实现, 依赖DBImpl里的write实现
   virtual Status Put(const WriteOptions& options,
                      const Slice& key,
                      const Slice& value) = 0;
@@ -66,11 +68,14 @@ class DB {
   // success, and a non-OK status on error.  It is not an error if "key"
   // did not exist in the database.
   // Note: consider setting options.sync = true.
+  
+  // DB类实现, 依赖DBImpl里的write实现
   virtual Status Delete(const WriteOptions& options, const Slice& key) = 0;
 
   // Apply the specified updates to the database.
   // Returns OK on success, non-OK on failure.
   // Note: consider setting options.sync = true.
+
   virtual Status Write(const WriteOptions& options, WriteBatch* updates) = 0;
 
   // If the database contains an entry for "key" store the

@@ -514,9 +514,13 @@ class PosixEnv : public Env {
   }
 
   size_t page_size_;
+  //mutex
   pthread_mutex_t mu_;
+  //条件变量
   pthread_cond_t bgsignal_;
+  //线程
   pthread_t bgthread_;
+
   bool started_bgthread_;
 
   // Entry per Schedule() call
@@ -531,6 +535,7 @@ PosixEnv::PosixEnv() : page_size_(getpagesize()),
   PthreadCall("cvar_init", pthread_cond_init(&bgsignal_, NULL));
 }
 
+//生产消费模型，生产
 void PosixEnv::Schedule(void (*function)(void*), void* arg) {
   PthreadCall("lock", pthread_mutex_lock(&mu_));
 
@@ -549,6 +554,7 @@ void PosixEnv::Schedule(void (*function)(void*), void* arg) {
   }
 
   // Add to priority queue
+  // 队列加一个job
   queue_.push_back(BGItem());
   queue_.back().function = function;
   queue_.back().arg = arg;
@@ -556,6 +562,7 @@ void PosixEnv::Schedule(void (*function)(void*), void* arg) {
   PthreadCall("unlock", pthread_mutex_unlock(&mu_));
 }
 
+//生产消费模型，消费
 void PosixEnv::BGThread() {
   while (true) {
     // Wait until there is an item that is ready to run
@@ -579,6 +586,10 @@ struct StartThreadState {
   void* arg;
 };
 }
+
+// 线程绑定的具体运行函数
+// 每个线程绑定消费函数？进行消费，队列空为线程阻塞，sleep
+// 有job则唤醒线程
 static void* StartThreadWrapper(void* arg) {
   StartThreadState* state = reinterpret_cast<StartThreadState*>(arg);
   state->user_function(state->arg);
@@ -586,6 +597,7 @@ static void* StartThreadWrapper(void* arg) {
   return NULL;
 }
 
+//创建线程，封装pthread_create
 void PosixEnv::StartThread(void (*function)(void* arg), void* arg) {
   pthread_t t;
   StartThreadState* state = new StartThreadState;
@@ -599,6 +611,8 @@ void PosixEnv::StartThread(void (*function)(void* arg), void* arg) {
 
 static pthread_once_t once = PTHREAD_ONCE_INIT;
 static Env* default_env;
+
+//父类用子类的进行初始化，转义
 static void InitDefaultEnv() { default_env = new PosixEnv; }
 
 Env* Env::Default() {
