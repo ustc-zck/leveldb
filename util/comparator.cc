@@ -81,6 +81,8 @@ static void InitModule() {
   bytewise = new BytewiseComparatorImpl;
 }
 
+//父类和子类转义
+//全局定义
 const Comparator* BytewiseComparator() {
   port::InitOnce(&once, InitModule);
   return bytewise;

@@ -12,6 +12,8 @@
 
 namespace leveldb {
 
+//new动作的封装
+//记录已经分配的和new出来的
 class Arena {
  public:
   Arena();

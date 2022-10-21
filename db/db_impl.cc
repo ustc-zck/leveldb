@@ -85,6 +85,8 @@ static void ClipToRange(T* ptr, V minvalue, V maxvalue) {
   if (static_cast<V>(*ptr) > maxvalue) *ptr = maxvalue;
   if (static_cast<V>(*ptr) < minvalue) *ptr = minvalue;
 }
+
+//默认配置项
 Options SanitizeOptions(const std::string& dbname,
                         const InternalKeyComparator* icmp,
                         const InternalFilterPolicy* ipolicy,
@@ -117,12 +119,16 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
       internal_filter_policy_(options.filter_policy),
       options_(SanitizeOptions(
           dbname, &internal_comparator_, &internal_filter_policy_, options)),
+      //日志
       owns_info_log_(options_.info_log != options.info_log),
+      //block cache
       owns_cache_(options_.block_cache != options.block_cache),
       dbname_(dbname),
       db_lock_(NULL),
       shutting_down_(NULL),
+      //在这儿实现类的初始化以及赋值
       bg_cv_(&mutex_),
+      //mem table
       mem_(new MemTable(internal_comparator_)),
       imm_(NULL),
       logfile_(NULL),

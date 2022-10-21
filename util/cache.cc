@@ -321,7 +321,9 @@ class ShardedLRUCache : public Cache {
 
 }  // end anonymous namespace
 
+//实现全局定义的cache函数
 Cache* NewLRUCache(size_t capacity) {
+  //这个地方不会折构掉吗？
   return new ShardedLRUCache(capacity);
 }
 

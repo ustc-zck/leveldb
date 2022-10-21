@@ -28,6 +28,7 @@ class Cache;
 
 // Create a new cache with a fixed size capacity.  This implementation
 // of Cache uses a least-recently-used eviction policy.
+// 全局定义cache
 extern Cache* NewLRUCache(size_t capacity);
 
 class Cache {

@@ -63,6 +63,8 @@ class FilterPolicy {
 // ignores trailing spaces, it would be incorrect to use a
 // FilterPolicy (like NewBloomFilterPolicy) that does not ignore
 // trailing spaces in keys.
+
+//全局定义
 extern const FilterPolicy* NewBloomFilterPolicy(int bits_per_key);
 
 }

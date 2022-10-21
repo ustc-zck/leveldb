@@ -1,6 +1,13 @@
 {
     "files.associations": {
         "iosfwd": "cpp",
-        "__hash_table": "cpp"
+        "__hash_table": "cpp",
+        "algorithm": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "locale": "cpp",
+        "optional": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
     }
 }
