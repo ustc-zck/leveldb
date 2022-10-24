@@ -12,6 +12,7 @@
 
 namespace leveldb {
 
+
 class WritableFile;
 
 namespace log {

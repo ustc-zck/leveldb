@@ -127,15 +127,27 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
       db_lock_(NULL),
       shutting_down_(NULL),
       //在这儿实现类的初始化以及赋值
+      //mutex以及条件变量
       bg_cv_(&mutex_),
-      //mem table
+      //mem table, key comparator, 跳表
       mem_(new MemTable(internal_comparator_)),
+    
+      //这个是写满了，准备flush到磁盘的memtable？
       imm_(NULL),
+
+      //文件
       logfile_(NULL),
+      
+      //log num
       logfile_number_(0),
       log_(NULL),
+      //写磁盘的封装，memcpy, flush
       tmp_batch_(new WriteBatch),
+
+      //是否后台compaction
       bg_compaction_scheduled_(false),
+
+      //手动对某个范围内的key进行compaction，key start and key end
       manual_compaction_(NULL) {
   mem_->Ref();
   has_imm_.Release_Store(NULL);
@@ -1398,6 +1410,9 @@ Status DB::Delete(const WriteOptions& opt, const Slice& key) {
 
 DB::~DB() { }
 
+//open的过程包含了mem table的初始化，table cache的初始化
+//log文件以及log num的初始化
+//
 Status DB::Open(const Options& options, const std::string& dbname,
                 DB** dbptr) {
   *dbptr = NULL;
