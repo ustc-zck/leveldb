@@ -180,6 +180,8 @@ struct ReadOptions {
 };
 
 // Options that control write operations
+
+//控制写操作，目前只有sync选型，默认false
 struct WriteOptions {
   // If true, the write will be flushed from the operating system
   // buffer cache (by calling WritableFile::Sync()) before the write

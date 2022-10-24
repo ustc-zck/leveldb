@@ -61,6 +61,8 @@ class DBImpl : public DB {
  private:
   friend class DB;
   struct CompactionState;
+
+  //声明writer
   struct Writer;
 
   Iterator* NewInternalIterator(const ReadOptions&,

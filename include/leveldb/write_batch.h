@@ -28,6 +28,9 @@ namespace leveldb {
 
 class Slice;
 
+//批量写
+//writebatch::put delete 和clear操作对rep_字符串按照writebatch的编码格式进行操作
+//最后，由Iterate方法进行迭代，操作memtbale进行操作
 class WriteBatch {
  public:
   WriteBatch();
@@ -43,12 +46,15 @@ class WriteBatch {
   void Clear();
 
   // Support for iterating over the contents of a batch.
+  //memtable的子类，继承与封装mem table的put add等
   class Handler {
    public:
     virtual ~Handler();
     virtual void Put(const Slice& key, const Slice& value) = 0;
     virtual void Delete(const Slice& key) = 0;
   };
+
+  //解析迭代rep,memtable写或者删除
   Status Iterate(Handler* handler) const;
 
  private:

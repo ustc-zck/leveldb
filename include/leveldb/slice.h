@@ -22,6 +22,7 @@
 
 namespace leveldb {
 
+//char* 的简单封装
 class Slice {
  public:
   // Create an empty slice.

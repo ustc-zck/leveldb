@@ -108,6 +108,7 @@ void WriteBatch::Delete(const Slice& key) {
   PutLengthPrefixedSlice(&rep_, key);
 }
 
+//mem table 相关操作
 namespace {
 class MemTableInserter : public WriteBatch::Handler {
  public:

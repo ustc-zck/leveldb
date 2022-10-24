@@ -36,6 +36,8 @@
 namespace leveldb {
 
 // Information kept for every waiting writer
+
+//对writebatch和mutex，条件变量进行封装
 struct DBImpl::Writer {
   Status status;
   WriteBatch* batch;
@@ -141,6 +143,7 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
       //log num
       logfile_number_(0),
       log_(NULL),
+
       //写磁盘的封装，memcpy, flush
       tmp_batch_(new WriteBatch),
 
@@ -1089,6 +1092,7 @@ Status DBImpl::Get(const ReadOptions& options,
     mutex_.Unlock();
     // First look in the memtable, then in the immutable memtable (if any).
     LookupKey lkey(key, snapshot);
+    //读mem table，读imm table 以及 多层读磁盘数据
     if (mem->Get(lkey, value, &s)) {
       // Done
     } else if (imm != NULL && imm->Get(lkey, value, &s)) {
@@ -1138,6 +1142,9 @@ Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
   return DB::Delete(options, key);
 }
 
+//写batch
+//push进队列，signal通知
+//先写日志，后写memtable, 不写盘
 Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
   Writer w(&mutex_);
   w.batch = my_batch;
@@ -1145,7 +1152,12 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
   w.done = false;
 
   MutexLock l(&mutex_);
+  //writer封装 writebatch， mutex以及条件变量
+  //writer_队列 push
   writers_.push_back(&w);
+
+  //阻塞，保证执行顺序
+  //当前请求为队首部元素的时候，进行处理
   while (!w.done && &w != writers_.front()) {
     w.cv.Wait();
   }
@@ -1154,7 +1166,10 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
   }
 
   // May temporarily unlock and wait.
+  // 可能阻塞
   Status status = MakeRoomForWrite(my_batch == NULL);
+  
+  //version内部封装last sequence
   uint64_t last_sequence = versions_->LastSequence();
   Writer* last_writer = &w;
   if (status.ok() && my_batch != NULL) {  // NULL batch is for compactions
@@ -1203,6 +1218,8 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
 
 // REQUIRES: Writer list must be non-empty
 // REQUIRES: First writer must have a non-NULL batch
+
+//将writers_队列里的WiteBatch拼装成一个WriteBatch
 WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
   assert(!writers_.empty());
   Writer* first = writers_.front();
@@ -1219,7 +1236,7 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
     max_size = size + (128<<10);
   }
 
-  *last_writer = first;
+  *last_writer = first; 
   std::deque<Writer*>::iterator iter = writers_.begin();
   ++iter;  // Advance past "first"
   for (; iter != writers_.end(); ++iter) {
@@ -1252,6 +1269,8 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
 
 // REQUIRES: mutex_ is held
 // REQUIRES: this thread is currently at the front of the writer queue
+
+//尝试进空间check, 进行mem转化为imm_
 Status DBImpl::MakeRoomForWrite(bool force) {
   mutex_.AssertHeld();
   assert(!writers_.empty());
@@ -1300,6 +1319,7 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       }
       delete log_;
       delete logfile_;
+      //每个日志文件对应一个imm_刷新
       logfile_ = lfile;
       logfile_number_ = new_log_number;
       log_ = new log::Writer(lfile);
@@ -1397,7 +1417,9 @@ void DBImpl::GetApproximateSizes(
 // Default implementations of convenience methods that subclasses of DB
 // can call if they wish
 Status DB::Put(const WriteOptions& opt, const Slice& key, const Slice& value) {
+  //生明batch
   WriteBatch batch;
+  //字符串操作，加key，value按照batch编码格式加入到字符串中
   batch.Put(key, value);
   return Write(opt, &batch);
 }
@@ -1412,7 +1434,7 @@ DB::~DB() { }
 
 //open的过程包含了mem table的初始化，table cache的初始化
 //log文件以及log num的初始化
-//
+
 Status DB::Open(const Options& options, const std::string& dbname,
                 DB** dbptr) {
   *dbptr = NULL;
