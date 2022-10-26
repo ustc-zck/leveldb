@@ -137,14 +137,18 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
       //这个是写满了，准备flush到磁盘的memtable？
       imm_(NULL),
 
-      //文件
+      //当前指向的日志文件
       logfile_(NULL),
       
       //log num
       logfile_number_(0),
+
+      //日志写操作的封装
       log_(NULL),
 
       //写磁盘的封装，memcpy, flush
+
+      //WriteBatch用来封装请求
       tmp_batch_(new WriteBatch),
 
       //是否后台compaction
@@ -1146,11 +1150,14 @@ Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
 //push进队列，signal通知
 //先写日志，后写memtable, 不写盘
 Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
+
+  //WriteBatch分装成Writer
   Writer w(&mutex_);
   w.batch = my_batch;
   w.sync = options.sync;
   w.done = false;
 
+  //封装mutex  
   MutexLock l(&mutex_);
   //writer封装 writebatch， mutex以及条件变量
   //writer_队列 push
@@ -1161,9 +1168,12 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
   while (!w.done && &w != writers_.front()) {
     w.cv.Wait();
   }
+
+  //通过，当前writer对队首元素，对当前writer进行处理
   if (w.done) {
     return w.status;
   }
+
 
   // May temporarily unlock and wait.
   // 可能阻塞
@@ -1203,6 +1213,8 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
     if (ready != &w) {
       ready->status = status;
       ready->done = true;
+      //对应上面代码的w.cv.Wait()
+      //并不是多线程生产消费环境的wait
       ready->cv.Signal();
     }
     if (ready == last_writer) break;
@@ -1301,9 +1313,13 @@ Status DBImpl::MakeRoomForWrite(bool force) {
     } else if (imm_ != NULL) {
       // We have filled up the current memtable, but the previous
       // one is still being compacted, so we wait.
+
+      //imm_非空，当前在进行imm_转sst文件
       bg_cv_.Wait();
     } else if (versions_->NumLevelFiles(0) >= config::kL0_StopWritesTrigger) {
       // There are too many level-0 files.
+
+      //0级别文件过多，则必须阻塞，等待压缩
       Log(options_.info_log, "waiting...\n");
       bg_cv_.Wait();
     } else {

@@ -84,6 +84,7 @@ static void InitModule() {
 //父类和子类转义
 //全局定义
 const Comparator* BytewiseComparator() {
+  //多线程环境下，只进行一次初始化操作，具体由哪个线程操作不确定
   port::InitOnce(&once, InitModule);
   return bytewise;
 }

@@ -127,8 +127,11 @@ class DBImpl : public DB {
   MemTable* imm_;                // Memtable being compacted
   //内存序的封装？
   port::AtomicPointer has_imm_;  // So bg thread can detect non-NULL imm_
+  //正在写的日志文件
   WritableFile* logfile_;
+  //日志号
   uint64_t logfile_number_;
+  //写日志的封装
   log::Writer* log_;
 
   // Queue of writers.

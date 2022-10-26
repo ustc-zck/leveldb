@@ -59,6 +59,11 @@
         "tuple": "cpp",
         "type_traits": "cpp",
         "typeinfo": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "thread": "cpp",
+        "condition_variable": "cpp",
+        "iostream": "cpp",
+        "queue": "cpp",
+        "__functional_03": "cpp"
     }
 }
