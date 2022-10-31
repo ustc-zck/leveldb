@@ -46,6 +46,8 @@ class Env {
   // not exist, returns a non-OK status.
   //
   // The returned file will only be accessed by one thread at a time.
+  
+  //open一个新文件 poxis open 得到f， 封装fname和f, 得到SequentialFile
   virtual Status NewSequentialFile(const std::string& fname,
                                    SequentialFile** result) = 0;
 
@@ -56,6 +58,8 @@ class Env {
   // status.
   //
   // The returned file may be concurrently accessed by multiple threads.
+
+  //类似，open选项不一样
   virtual Status NewRandomAccessFile(const std::string& fname,
                                      RandomAccessFile** result) = 0;
 
@@ -66,15 +70,21 @@ class Env {
   // returns non-OK.
   //
   // The returned file will only be accessed by one thread at a time.
+
+  //类似，fopen选项不一样
   virtual Status NewWritableFile(const std::string& fname,
                                  WritableFile** result) = 0;
 
   // Returns true iff the named file exists.
+
+  //access判断文件是否存在
   virtual bool FileExists(const std::string& fname) = 0;
 
   // Store in *result the names of the children of the specified directory.
   // The names are relative to "dir".
   // Original contents of *results are dropped.
+
+  //获取目录下的子文件
   virtual Status GetChildren(const std::string& dir,
                              std::vector<std::string>* result) = 0;
 
@@ -88,9 +98,11 @@ class Env {
   virtual Status DeleteDir(const std::string& dirname) = 0;
 
   // Store the size of fname in *file_size.
+  // linux posix stat 
   virtual Status GetFileSize(const std::string& fname, uint64_t* file_size) = 0;
 
   // Rename file src to target.
+  // linux posix rename
   virtual Status RenameFile(const std::string& src,
                             const std::string& target) = 0;
 
@@ -108,11 +120,15 @@ class Env {
   // to go away.
   //
   // May create the named file if it does not already exist.
+
+  //fcntl操作 实现对文件的加锁
   virtual Status LockFile(const std::string& fname, FileLock** lock) = 0;
 
   // Release the lock acquired by a previous successful call to LockFile.
   // REQUIRES: lock was returned by a successful LockFile() call
   // REQUIRES: lock has not already been unlocked.
+
+  //fcntl操作，实现对文件的解锁
   virtual Status UnlockFile(FileLock* lock) = 0;
 
   // Arrange to run "(*function)(arg)" once in a background thread.
@@ -121,12 +137,19 @@ class Env {
   // added to the same Env may run concurrently in different threads.
   // I.e., the caller may not assume that background work items are
   // serialized.
+
+  //生产消费模型，封装mutex，条件变量
+  //Schedule() 生产
+  //BGThread()消费
   virtual void Schedule(
       void (*function)(void* arg),
       void* arg) = 0;
 
   // Start a new thread, invoking "function(arg)" within the new thread.
   // When "function(arg)" returns, the thread will be destroyed.
+
+  //pthread_create + funcion + args
+
   virtual void StartThread(void (*function)(void* arg), void* arg) = 0;
 
   // *path is set to a temporary directory that can be used for testing. It may

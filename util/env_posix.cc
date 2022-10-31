@@ -598,6 +598,7 @@ static void* StartThreadWrapper(void* arg) {
 }
 
 //创建线程，封装pthread_create
+//创建线程，执行运行函数
 void PosixEnv::StartThread(void (*function)(void* arg), void* arg) {
   pthread_t t;
   StartThreadState* state = new StartThreadState;
@@ -613,6 +614,7 @@ static pthread_once_t once = PTHREAD_ONCE_INIT;
 static Env* default_env;
 
 //父类用子类的进行初始化，转义
+//单例模式
 static void InitDefaultEnv() { default_env = new PosixEnv; }
 
 Env* Env::Default() {

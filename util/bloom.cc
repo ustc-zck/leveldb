@@ -16,10 +16,12 @@ static uint32_t BloomHash(const Slice& key) {
 
 class BloomFilterPolicy : public FilterPolicy {
  private:
+  //两者关联，ln2
   size_t bits_per_key_;
   size_t k_;
 
  public:
+  // 控制bloom过滤器大小在1～30
   explicit BloomFilterPolicy(int bits_per_key)
       : bits_per_key_(bits_per_key) {
     // We intentionally round down to reduce probing cost a little bit
@@ -32,7 +34,7 @@ class BloomFilterPolicy : public FilterPolicy {
     return "leveldb.BuiltinBloomFilter";
   }
 
-  //将keys数组过滤到dst
+  //bloom过滤规则dst，dst作bloom过滤
   virtual void CreateFilter(const Slice* keys, int n, std::string* dst) const {
     // Compute bloom filter size (in both bits and bytes)
     size_t bits = n * bits_per_key_;
@@ -61,7 +63,8 @@ class BloomFilterPolicy : public FilterPolicy {
     }
   }
 
-  //通过bloom过滤器快速比较两个key是否可能match
+  //通过bloom过滤器快速判断
+  //某个key是否有可能在bloom_filter中
   virtual bool KeyMayMatch(const Slice& key, const Slice& bloom_filter) const {
     const size_t len = bloom_filter.size();
     if (len < 2) return false;

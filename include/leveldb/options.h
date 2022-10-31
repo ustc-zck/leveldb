@@ -72,6 +72,7 @@ struct Options {
   // Default: NULL
 
   //日志组件
+  //
   Logger* info_log;
 
   // -------------------
@@ -106,6 +107,7 @@ struct Options {
   // Default: NULL
 
   //按照hash值模结果划分，分为多个lru, 按照lru策略实现值的查询，删除，插入等操作
+  //多个shard的lru
   Cache* block_cache;
 
   // Approximate size of user data packed per block.  Note that the
