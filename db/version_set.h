@@ -119,15 +119,22 @@ class Version {
   int refs_;                    // Number of live refs to this version
 
   // List of files per level
+
+  // version记录每个level的文件信息
+  // 每个level的文件信息用数组存储
   std::vector<FileMetaData*> files_[config::kNumLevels];
 
   // Next file to compact based on seek stats.
+
+  //记录下一个要compact的level及其文件
   FileMetaData* file_to_compact_;
   int file_to_compact_level_;
 
   // Level that should be compacted next and its compaction score.
   // Score < 1 means compaction is not strictly needed.  These fields
   // are initialized by Finalize().
+  
+  // 下一个要compact的level以及score
   double compaction_score_;
   int compaction_level_;
 
@@ -146,6 +153,7 @@ class Version {
   void operator=(const Version&);
 };
 
+//VersionSet对应manifest文件
 class VersionSet {
  public:
   VersionSet(const std::string& dbname,
@@ -159,6 +167,9 @@ class VersionSet {
   // current version.  Will release *mu while actually writing to the file.
   // REQUIRES: *mu is held on entry.
   // REQUIRES: no other thread concurrently calls LogAndApply()
+
+
+  //apply *edit 形成新的Version
   Status LogAndApply(VersionEdit* edit, port::Mutex* mu);
 
   // Recover the last saved descriptor from persistent storage.
@@ -289,6 +300,8 @@ class VersionSet {
   // Opened lazily
   WritableFile* descriptor_file_;
   log::Writer* descriptor_log_;
+  
+  //维护version列表
   Version dummy_versions_;  // Head of circular doubly-linked list of versions.
   Version* current_;        // == dummy_versions_.prev_
 
@@ -371,6 +384,7 @@ class Compaction {
   // is that we are positioned at one of the file ranges for each
   // higher level than the ones involved in this compaction (i.e. for
   // all L >= level_ + 2).
+
   size_t level_ptrs_[config::kNumLevels];
 };
 

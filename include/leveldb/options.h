@@ -39,7 +39,7 @@ struct Options {
   // here has the same name and orders keys *exactly* the same as the
   // comparator provided to previous open calls on the same DB.
 
-  //定义key的顺序，compare函数，以及findshortestseparator, FindShortSuccessor
+  //定义key的顺序，compare函数，以及findshortestseparatologfile_number_r, FindShortSuccessor
   const Comparator* comparator;
 
   // If true, the database will be created if it is missing.
@@ -72,7 +72,7 @@ struct Options {
   // Default: NULL
 
   //日志组件
-  //
+
   Logger* info_log;
 
   // -------------------

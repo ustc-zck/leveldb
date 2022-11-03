@@ -163,6 +163,10 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
   const int table_cache_size = options.max_open_files - 10;
   table_cache_ = new TableCache(dbname_, &options_, table_cache_size);
 
+
+  // version set 
+  // vesion的链表集合
+  // Version(N) + VersionEdit == Verison(N+1)
   versions_ = new VersionSet(dbname_, &options_, table_cache_,
                              &internal_comparator_);
 }
@@ -201,9 +205,11 @@ Status DBImpl::NewDB() {
   new_db.SetComparatorName(user_comparator()->Name());
   new_db.SetLogNumber(0);
   new_db.SetNextFile(2);
+
   new_db.SetLastSequence(0);
 
   const std::string manifest = DescriptorFileName(dbname_, 1);
+  
   WritableFile* file;
   Status s = env_->NewWritableFile(manifest, &file);
   if (!s.ok()) {
@@ -287,6 +293,7 @@ void DBImpl::DeleteObsoleteFiles() {
   }
 }
 
+//消费wal
 Status DBImpl::Recover(VersionEdit* edit) {
   mutex_.AssertHeld();
 
@@ -1458,6 +1465,7 @@ Status DB::Open(const Options& options, const std::string& dbname,
   DBImpl* impl = new DBImpl(options, dbname);
   impl->mutex_.Lock();
   VersionEdit edit;
+  //TODO, check recover具体逻辑，是否处理wal
   Status s = impl->Recover(&edit); // Handles create_if_missing, error_if_exists
   if (s.ok()) {
     uint64_t new_log_number = impl->versions_->NewFileNumber();
@@ -1469,10 +1477,13 @@ Status DB::Open(const Options& options, const std::string& dbname,
       impl->logfile_ = lfile;
       impl->logfile_number_ = new_log_number;
       impl->log_ = new log::Writer(lfile);
+      //生成新的version, 生成manifest文件
       s = impl->versions_->LogAndApply(&edit, &impl->mutex_);
     }
     if (s.ok()) {
+      //删除过期文件
       impl->DeleteObsoleteFiles();
+      //后台进程，压缩memtable
       impl->MaybeScheduleCompaction();
     }
   }

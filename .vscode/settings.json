@@ -64,6 +64,10 @@
         "condition_variable": "cpp",
         "iostream": "cpp",
         "queue": "cpp",
-        "__functional_03": "cpp"
+        "__functional_03": "cpp",
+        "array": "cpp",
+        "cmath": "cpp",
+        "complex": "cpp",
+        "unordered_map": "cpp"
     }
 }

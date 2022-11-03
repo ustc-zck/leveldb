@@ -224,6 +224,7 @@ class RandomAccessFile {
 // at a time to the file.
 
 //写文件封装，memcpy，满了flush
+//fd封装
 class WritableFile {
  public:
   WritableFile() { }
