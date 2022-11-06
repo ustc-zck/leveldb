@@ -140,10 +140,11 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
       //当前指向的日志文件
       logfile_(NULL),
       
-      //log num
+      //日志文件的logfile_number
       logfile_number_(0),
 
       //日志写操作的封装
+
       log_(NULL),
 
       //写磁盘的封装，memcpy, flush
@@ -163,7 +164,6 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
   const int table_cache_size = options.max_open_files - 10;
   table_cache_ = new TableCache(dbname_, &options_, table_cache_size);
 
-
   // version set 
   // vesion的链表集合
   // Version(N) + VersionEdit == Verison(N+1)
@@ -171,6 +171,8 @@ DBImpl::DBImpl(const Options& options, const std::string& dbname)
                              &internal_comparator_);
 }
 
+
+//等待折构函数done
 DBImpl::~DBImpl() {
   // Wait for background work to finish
   mutex_.Lock();
@@ -324,6 +326,7 @@ Status DBImpl::Recover(VersionEdit* edit) {
     }
   }
 
+  //读manifest文件, 恢复版本信息
   s = versions_->Recover();
   if (s.ok()) {
     SequenceNumber max_sequence(0);
@@ -1483,7 +1486,7 @@ Status DB::Open(const Options& options, const std::string& dbname,
     if (s.ok()) {
       //删除过期文件
       impl->DeleteObsoleteFiles();
-      //后台进程，压缩memtable
+      //后台进程，压缩mem
       impl->MaybeScheduleCompaction();
     }
   }

@@ -579,6 +579,9 @@ class VersionSet::Builder {
   }
 
   // Apply all of the edits in *edit to the current state.
+
+  //更新添加的文件/删除的文件
+  //更新compaction指针
   void Apply(VersionEdit* edit) {
     // Update compaction pointers
     for (size_t i = 0; i < edit->compact_pointers_.size(); i++) {
@@ -684,6 +687,7 @@ class VersionSet::Builder {
                                     f->smallest) < 0);
       }
       f->refs++;
+      //指针push back
       files->push_back(f);
     }
   }
@@ -752,9 +756,14 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
   Version* v = new Version(this);
   {
     Builder builder(this, current_);
+    //更新添加的文件/删除的文件
+    //更新compaction指针
     builder.Apply(edit);
+    //更新每个level的文件
     builder.SaveTo(v);
   }
+
+  //计算出最佳的压缩level和score
   Finalize(v);
 
   // Initialize new descriptor log file if necessary by creating
@@ -872,6 +881,7 @@ Status VersionSet::Recover() {
       }
 
       if (s.ok()) {
+        //轮训，apply恢复
         builder.Apply(&edit);
       }
 

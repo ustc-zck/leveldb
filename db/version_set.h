@@ -168,8 +168,8 @@ class VersionSet {
   // REQUIRES: *mu is held on entry.
   // REQUIRES: no other thread concurrently calls LogAndApply()
 
+  // apply *edit 形成新的Version，生成新的descriptor
 
-  //apply *edit 形成新的Version
   Status LogAndApply(VersionEdit* edit, port::Mutex* mu);
 
   // Recover the last saved descriptor from persistent storage.
@@ -293,8 +293,11 @@ class VersionSet {
   const InternalKeyComparator icmp_;
   uint64_t next_file_number_;
   uint64_t manifest_file_number_;
+  // wal最新的seq num
   uint64_t last_sequence_;
+  // 最小的log num
   uint64_t log_number_;
+
   uint64_t prev_log_number_;  // 0 or backing store for memtable being compacted
 
   // Opened lazily
