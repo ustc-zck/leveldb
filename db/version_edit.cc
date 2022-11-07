@@ -38,6 +38,7 @@ void VersionEdit::Clear() {
   new_files_.clear();
 }
 
+//序列化
 void VersionEdit::EncodeTo(std::string* dst) const {
   if (has_comparator_) {
     PutVarint32(dst, kComparator);
@@ -106,6 +107,8 @@ static bool GetLevel(Slice* input, int* level) {
   }
 }
 
+
+//按照Encode格式反向序列化
 Status VersionEdit::DecodeFrom(const Slice& src) {
   Clear();
   Slice input = src;

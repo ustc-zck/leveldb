@@ -32,12 +32,15 @@ void EncodeFixed64(char* buf, uint64_t value) {
 #endif
 }
 
+
+//将string指定32位编码
 void PutFixed32(std::string* dst, uint32_t value) {
   char buf[sizeof(value)];
   EncodeFixed32(buf, value);
   dst->append(buf, sizeof(buf));
 }
 
+//将string指定64位编码
 void PutFixed64(std::string* dst, uint64_t value) {
   char buf[sizeof(value)];
   EncodeFixed64(buf, value);

@@ -14,8 +14,7 @@ namespace leveldb {
 
 class VersionSet;
 
-//每一个文件的信息
-//记录size, 最小key，最大key
+//每一个文件的信息，记录在VersionEdit里
 struct FileMetaData {
   int refs;
   int allowed_seeks;          // Seeks allowed until compaction
@@ -27,10 +26,10 @@ struct FileMetaData {
   FileMetaData() : refs(0), allowed_seeks(1 << 30), file_size(0) { }
 };
 
-
-//表示版本之间的diff
-//新增文件，删除文件
-
+//VersionEdit表示版本之间的diff
+//包含信息为log_numver, pre_log_number, last_requence
+//compaction_pointer 每个level的key
+//add_files 和 delete files, 表示version之间的文件diff，每个file记录元信息，包括number，最小key，最大key，每个文件的size
 class VersionEdit {
  public:
   VersionEdit() { Clear(); }
@@ -65,7 +64,6 @@ class VersionEdit {
   // Add the specified file at the specified number.
   // REQUIRES: This version has not been saved (see VersionSet::SaveTo)
   // REQUIRES: "smallest" and "largest" are smallest and largest keys in file
-  
 
   //添加文件到newfile列表
   void AddFile(int level, uint64_t file,
@@ -112,6 +110,7 @@ class VersionEdit {
   bool has_next_file_number_;
   bool has_last_sequence_;
 
+  //每个level的起始key
   std::vector< std::pair<int, InternalKey> > compact_pointers_;
   DeletedFileSet deleted_files_;
   std::vector< std::pair<int, FileMetaData> > new_files_;

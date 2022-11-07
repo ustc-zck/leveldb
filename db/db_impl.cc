@@ -327,6 +327,7 @@ Status DBImpl::Recover(VersionEdit* edit) {
   }
 
   //读manifest文件, 恢复版本信息
+  //从头开始遍历，遍历完所有diff则获取到最新版本
   s = versions_->Recover();
   if (s.ok()) {
     SequenceNumber max_sequence(0);
@@ -437,6 +438,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
       mem = new MemTable(internal_comparator_);
       mem->Ref();
     }
+    //wal解析成WriteBatch，写mem table
     status = WriteBatchInternal::InsertInto(&batch, mem);
     MaybeIgnoreError(&status);
     if (!status.ok()) {
@@ -486,6 +488,7 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
   Status s;
   {
     mutex_.Unlock();
+    //迭代mem table，生成文件
     s = BuildTable(dbname_, env_, options_, table_cache_, iter, &meta);
     mutex_.Lock();
   }
@@ -1485,6 +1488,7 @@ Status DB::Open(const Options& options, const std::string& dbname,
     }
     if (s.ok()) {
       //删除过期文件
+      //包括wal文件，sst文件等等
       impl->DeleteObsoleteFiles();
       //后台进程，压缩mem
       impl->MaybeScheduleCompaction();
