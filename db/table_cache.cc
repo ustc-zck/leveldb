@@ -48,6 +48,7 @@ Status TableCache::FindTable(uint64_t file_number, uint64_t file_size,
   char buf[sizeof(file_number)];
   EncodeFixed64(buf, file_number);
   Slice key(buf, sizeof(buf));
+  //读cache，没读到返回
   *handle = cache_->Lookup(key);
   if (*handle == NULL) {
     std::string fname = TableFileName(dbname_, file_number);
@@ -96,6 +97,7 @@ Iterator* TableCache::NewIterator(const ReadOptions& options,
   return result;
 }
 
+//TODO, 不应该先读cache吗
 Status TableCache::Get(const ReadOptions& options,
                        uint64_t file_number,
                        uint64_t file_size,
@@ -106,6 +108,7 @@ Status TableCache::Get(const ReadOptions& options,
   Status s = FindTable(file_number, file_size, &handle);
   if (s.ok()) {
     Table* t = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
+    //文件迭代获取到value
     s = t->InternalGet(options, k, arg, saver);
     cache_->Release(handle);
   }

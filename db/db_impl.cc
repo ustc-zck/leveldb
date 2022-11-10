@@ -328,6 +328,7 @@ Status DBImpl::Recover(VersionEdit* edit) {
 
   //读manifest文件, 恢复版本信息
   //从头开始遍历，遍历完所有diff则获取到最新版本
+  //恢复出prev_log_num log_num next_file_number等信息
   s = versions_->Recover();
   if (s.ok()) {
     SequenceNumber max_sequence(0);
@@ -438,7 +439,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
       mem = new MemTable(internal_comparator_);
       mem->Ref();
     }
-    //wal解析成WriteBatch，写mem table
+    //wal解析成WriteBatch，写memtable
     status = WriteBatchInternal::InsertInto(&batch, mem);
     MaybeIgnoreError(&status);
     if (!status.ok()) {
@@ -451,6 +452,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
       *max_sequence = last_seq;
     }
 
+    //mem table满了，刷磁盘
     if (mem->ApproximateMemoryUsage() > options_.write_buffer_size) {
       status = WriteLevel0Table(mem, edit, NULL);
       if (!status.ok()) {
@@ -474,6 +476,10 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
   return status;
 }
 
+
+
+//生成sst文件
+//选择该文件的levl，记录VersionEdit信息
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
   mutex_.AssertHeld();
@@ -508,8 +514,10 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
     const Slice min_user_key = meta.smallest.user_key();
     const Slice max_user_key = meta.largest.user_key();
     if (base != NULL) {
+      //选择文件的level，依据overlap以及overlap size决策
       level = base->PickLevelForMemTableOutput(min_user_key, max_user_key);
     }
+    //VersionEdit添加文件
     edit->AddFile(level, meta.number, meta.file_size,
                   meta.smallest, meta.largest);
   }
@@ -1159,9 +1167,10 @@ Status DBImpl::Delete(const WriteOptions& options, const Slice& key) {
   return DB::Delete(options, key);
 }
 
-//写batch
-//push进队列，signal通知
-//先写日志，后写memtable, 不写盘
+// 单线程
+// 写batch
+// push进队列，signal通知
+// 先写日志，后写memtable, 不写盘
 Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
 
   //WriteBatch分装成Writer
@@ -1198,6 +1207,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
   if (status.ok() && my_batch != NULL) {  // NULL batch is for compactions
     WriteBatch* updates = BuildBatchGroup(&last_writer);
     WriteBatchInternal::SetSequence(updates, last_sequence + 1);
+    //更新last_sequence
     last_sequence += WriteBatchInternal::Count(updates);
 
     // Add to log and apply to memtable.  We can release the lock
@@ -1206,7 +1216,9 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* my_batch) {
     // into mem_.
     {
       mutex_.Unlock();
+      //wal写日志
       status = log_->AddRecord(WriteBatchInternal::Contents(updates));
+      //同步写
       if (status.ok() && options.sync) {
         status = logfile_->Sync();
       }

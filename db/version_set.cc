@@ -123,6 +123,12 @@ static bool BeforeFile(const Comparator* ucmp,
           ucmp->Compare(*user_key, f->smallest.user_key()) < 0);
 }
 
+
+// 判断files 是否跟smallest和largest是否有交集
+// disjoint_sorted_files 是否是相交文件，L0层级相交，L0以上文件不相交
+
+//1. 对于相交文件，也就是L0，需要遍历L0文件依次判断
+//2. 对于不相交文件，也就是L0以上的文件，由于文件整体有序，找到第一个范围内的文件进行判断
 bool SomeFileOverlapsRange(
     const InternalKeyComparator& icmp,
     bool disjoint_sorted_files,
@@ -317,6 +323,8 @@ Status Version::Get(const ReadOptions& options,
     if (level == 0) {
       // Level-0 files may overlap each other.  Find all files that
       // overlap user_key and process them in order from newest to oldest.
+
+      //对于L0层，由于文件重叠，需要找出所有的文件，从最新的往最旧的处理
       tmp.reserve(num_files);
       for (uint32_t i = 0; i < num_files; i++) {
         FileMetaData* f = files[i];
@@ -332,6 +340,7 @@ Status Version::Get(const ReadOptions& options,
       num_files = tmp.size();
     } else {
       // Binary search to find earliest index whose largest key >= ikey.
+      // 对于L0以上的level，根据key的范围，找到指定文件，找到每一层的指定文件
       uint32_t index = FindFile(vset_->icmp_, files_[level], ikey);
       if (index >= num_files) {
         files = NULL;
@@ -343,12 +352,14 @@ Status Version::Get(const ReadOptions& options,
           files = NULL;
           num_files = 0;
         } else {
+          //找到每个level对应的文件以及文件数量，对于L0以上的，num为1，文件为1
           files = &tmp2;
           num_files = 1;
         }
       }
     }
 
+    //对于找到的文件进行检索
     for (uint32_t i = 0; i < num_files; ++i) {
       if (last_file_read != NULL && stats->seek_file == NULL) {
         // We have had more than one seek for this read.  Charge the 1st file.
@@ -365,6 +376,7 @@ Status Version::Get(const ReadOptions& options,
       saver.ucmp = ucmp;
       saver.user_key = user_key;
       saver.value = value;
+      // 读cache，更新lru
       s = vset_->table_cache_->Get(options, f->number, f->file_size,
                                    ikey, &saver, SaveValue);
       if (!s.ok()) {
@@ -420,6 +432,10 @@ bool Version::OverlapInLevel(int level,
   return SomeFileOverlapsRange(vset_->icmp_, (level > 0), files_[level],
                                smallest_user_key, largest_user_key);
 }
+
+//对于某个memtable，选择某个level作为memtable的压缩level
+//a. 如果和某个level+1的文件有重叠，则返回level
+//b. 如果某个level+2的重叠size过大，则返回level
 
 int Version::PickLevelForMemTableOutput(
     const Slice& smallest_user_key,

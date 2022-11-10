@@ -68,6 +68,7 @@
         "array": "cpp",
         "cmath": "cpp",
         "complex": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "__memory": "cpp"
     }
 }
