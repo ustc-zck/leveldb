@@ -35,6 +35,8 @@ class Table {
   // for the duration of the returned table's lifetime.
   //
   // *file must remain live while this Table is in use.
+
+  // sorted-string table, table指的是一个sst文件
   static Status Open(const Options& options,
                      RandomAccessFile* file,
                      uint64_t file_size,

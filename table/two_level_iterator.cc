@@ -15,6 +15,10 @@ namespace {
 
 typedef Iterator* (*BlockFunction)(void*, const ReadOptions&, const Slice&);
 
+
+// two level iterator
+// 外层迭代， data block
+// 内层对每个block的内部kv进行迭代
 class TwoLevelIterator: public Iterator {
  public:
   TwoLevelIterator(
@@ -66,7 +70,9 @@ class TwoLevelIterator: public Iterator {
   void* arg_;
   const ReadOptions options_;
   Status status_;
+  //block的index
   IteratorWrapper index_iter_;
+  //某个指定block的迭代器
   IteratorWrapper data_iter_; // May be NULL
   // If data_iter_ is non-NULL, then "data_block_handle_" holds the
   // "index_value" passed to block_function_ to create the data_iter_.

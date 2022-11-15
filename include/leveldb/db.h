@@ -94,6 +94,12 @@ class DB {
   //
   // Caller should delete the iterator when it is no longer needed.
   // The returned iterator should be deleted before this db is deleted.
+
+  // 所有sst文件以及mem table的merge迭代器
+  // 1. merge 所有的sst文件以及memtable的迭代器
+  // 2. 对于文件的迭代器来说，是一个 two level迭代器，第一层level是block的index，
+  //    索引到某个block, 第二层level是每个block内部的迭代器，对kv进行迭代
+
   virtual Iterator* NewIterator(const ReadOptions& options) = 0;
 
   // Return a handle to the current DB state.  Iterators created with
@@ -143,6 +149,11 @@ class DB {
   // end==NULL is treated as a key after all keys in the database.
   // Therefore the following call will compact the entire database:
   //    db->CompactRange(NULL, NULL);
+
+
+  // paper BigTable, compact分为
+  // 1. minor compaction mem table 生成sst文件
+  // 2. major compaction 对多个文件以及mem作为输入，生成单个文件
   virtual void CompactRange(const Slice* begin, const Slice* end) = 0;
 
  private:

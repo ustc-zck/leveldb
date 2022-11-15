@@ -1173,8 +1173,13 @@ Iterator* VersionSet::MakeInputIterator(Compaction* c) {
   const int space = (c->level() == 0 ? c->inputs_[0].size() + 1 : 2);
   Iterator** list = new Iterator*[space];
   int num = 0;
+
+  //which 0 pick up compaction based on size
+  //whici 1 pick up compaction based on file 
   for (int which = 0; which < 2; which++) {
     if (!c->inputs_[which].empty()) {
+      // c->level() == 0 and which == 0
+      // L0 and which is 0
       if (c->level() + which == 0) {
         const std::vector<FileMetaData*>& files = c->inputs_[which];
         for (size_t i = 0; i < files.size(); i++) {
@@ -1201,6 +1206,10 @@ Compaction* VersionSet::PickCompaction() {
 
   // We prefer compactions triggered by too much data in a level over
   // the compactions triggered by seeks.
+
+  // pick compaction
+  // a. 优先根据文件size compact
+  // b. 根据versions文件compact列表进行compact
   const bool size_compaction = (current_->compaction_score_ >= 1);
   const bool seek_compaction = (current_->file_to_compact_ != NULL);
   if (size_compaction) {
@@ -1210,6 +1219,9 @@ Compaction* VersionSet::PickCompaction() {
     c = new Compaction(level);
 
     // Pick the first file that comes after compact_pointer_[level]
+
+    // compact_pointer记录每层文件的已经压缩的文件
+    // 从compact_pointer[level]后面开始寻找压缩文件
     for (size_t i = 0; i < current_->files_[level].size(); i++) {
       FileMetaData* f = current_->files_[level][i];
       if (compact_pointer_[level].empty() ||
@@ -1321,12 +1333,15 @@ Compaction* VersionSet::CompactRange(
     const InternalKey* begin,
     const InternalKey* end) {
   std::vector<FileMetaData*> inputs;
+  // 找出指定level和【begin, end】有交集的sst文件
   current_->GetOverlappingInputs(level, begin, end, &inputs);
   if (inputs.empty()) {
     return NULL;
   }
 
   // Avoid compacting too much in one shot in case the range is large.
+
+  // 防止一次compact过多
   const uint64_t limit = MaxFileSizeForLevel(level);
   uint64_t total = 0;
   for (size_t i = 0; i < inputs.size(); i++) {
@@ -1381,6 +1396,7 @@ void Compaction::AddInputDeletions(VersionEdit* edit) {
   }
 }
 
+// 判断高的level是否包含有文件的最小最大值包含这个key
 bool Compaction::IsBaseLevelForKey(const Slice& user_key) {
   // Maybe use binary search to find right entry instead of linear search?
   const Comparator* user_cmp = input_version_->vset_->icmp_.user_comparator();
