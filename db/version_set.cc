@@ -182,6 +182,7 @@ class Version::LevelFileNumIterator : public Iterator {
   virtual bool Valid() const {
     return index_ < flist_->size();
   }
+  // target和index的映射关系
   virtual void Seek(const Slice& target) {
     index_ = FindFile(icmp_, *flist_, target);
   }
@@ -223,7 +224,7 @@ class Version::LevelFileNumIterator : public Iterator {
 
 static Iterator* GetFileIterator(void* arg,
                                  const ReadOptions& options,
-                                 const Slice& file_value) {
+                                 const Slice& file_value) { 
   TableCache* cache = reinterpret_cast<TableCache*>(arg);
   if (file_value.size() != 16) {
     return NewErrorIterator(
@@ -898,7 +899,8 @@ Status VersionSet::Recover() {
       }
 
       if (s.ok()) {
-        //轮训，apply恢复
+        // 轮询，apply恢复
+        // 更新 compact_pointers_
         builder.Apply(&edit);
       }
 

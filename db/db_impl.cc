@@ -255,6 +255,7 @@ void DBImpl::DeleteObsoleteFiles() {
   uint64_t number;
   FileType type;
   for (size_t i = 0; i < filenames.size(); i++) {
+    //文件解析number和type
     if (ParseFileName(filenames[i], &number, &type)) {
       bool keep = true;
       switch (type) {
@@ -326,9 +327,9 @@ Status DBImpl::Recover(VersionEdit* edit) {
     }
   }
 
-  //读manifest文件, 恢复版本信息
-  //从头开始遍历，遍历完所有diff则获取到最新版本
-  //恢复出prev_log_num log_num next_file_number等信息
+  // 读manifest文件, 恢复版本信息
+  // 从头开始遍历，遍历完所有diff则获取到最新版本
+  // 恢复出prev_log_num log_num next_file_number等信息
   s = versions_->Recover();
   if (s.ok()) {
     SequenceNumber max_sequence(0);
@@ -478,13 +479,14 @@ Status DBImpl::RecoverLogFile(uint64_t log_number,
 
 
 
-//生成sst文件
-//选择该文件的level，记录VersionEdit信息
+// 生成sst文件
+// 选择该文件的level，记录VersionEdit信息
 Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
                                 Version* base) {
   mutex_.AssertHeld();
   const uint64_t start_micros = env_->NowMicros();
   FileMetaData meta;
+  // file number是生成sst的文件的编号
   meta.number = versions_->NewFileNumber();
   pending_outputs_.insert(meta.number);
   Iterator* iter = mem->NewIterator();
@@ -742,6 +744,7 @@ Status DBImpl::BackgroundCompaction() {
   } else {
     //挑选完文件之后具体的compaction逻辑
     CompactionState* compact = new CompactionState(c);
+    // 进行compaction逻辑
     status = DoCompactionWork(compact);
     CleanupCompaction(compact);
     c->ReleaseInputs();
@@ -1172,6 +1175,7 @@ Status DBImpl::Get(const ReadOptions& options,
 
 Iterator* DBImpl::NewIterator(const ReadOptions& options) {
   SequenceNumber latest_snapshot;
+  // mem, imm 以及
   Iterator* internal_iter = NewInternalIterator(options, &latest_snapshot);
   return NewDBIterator(
       &dbname_, env_, user_comparator(), internal_iter,
@@ -1405,6 +1409,7 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       log_ = new log::Writer(lfile);
       imm_ = mem_;
       has_imm_.Release_Store(imm_);
+      // make room for write here
       mem_ = new MemTable(internal_comparator_);
       mem_->Ref();
       force = false;   // Do not force another compaction if have room

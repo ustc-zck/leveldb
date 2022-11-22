@@ -34,6 +34,8 @@ namespace leveldb {
 
 class Arena;
 
+// 跳表内定义迭代器
+
 template<typename Key, class Comparator>
 class SkipList {
  private:

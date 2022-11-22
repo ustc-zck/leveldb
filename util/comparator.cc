@@ -28,6 +28,7 @@ class BytewiseComparatorImpl : public Comparator {
   }
 
   // 找出start和limit的公共前缀，然后resize start，将start改为公共前缀
+  // helloworld 和 hellozoomer 则返回 hellox
   virtual void FindShortestSeparator(
       std::string* start,
       const Slice& limit) const {
@@ -58,6 +59,7 @@ class BytewiseComparatorImpl : public Comparator {
   }
 
   // 找到第一个可以进行加操作的字符，然后从前开始截取到当前位置，进行resize
+  // helloworld 则返回 "i"
   virtual void FindShortSuccessor(std::string* key) const {
     // Find first character that can be incremented
     size_t n = key->size();

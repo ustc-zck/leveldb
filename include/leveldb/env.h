@@ -47,7 +47,7 @@ class Env {
   //
   // The returned file will only be accessed by one thread at a time.
   
-  //open一个新文件 poxis open 得到f， 封装fname和f, 得到SequentialFile
+  // open一个新文件 poxis open 得到f， 封装fname和f, 得到SequentialFile
   virtual Status NewSequentialFile(const std::string& fname,
                                    SequentialFile** result) = 0;
 
@@ -59,7 +59,7 @@ class Env {
   //
   // The returned file may be concurrently accessed by multiple threads.
 
-  //类似，open选项不一样
+  // 类似，open选项不一样
   virtual Status NewRandomAccessFile(const std::string& fname,
                                      RandomAccessFile** result) = 0;
 

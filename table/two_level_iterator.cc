@@ -29,6 +29,7 @@ class TwoLevelIterator: public Iterator {
 
   virtual ~TwoLevelIterator();
 
+  //key到文件的data_iter_的映射
   virtual void Seek(const Slice& target);
   virtual void SeekToFirst();
   virtual void SeekToLast();

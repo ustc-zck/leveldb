@@ -34,7 +34,11 @@ class BloomFilterPolicy : public FilterPolicy {
     return "leveldb.BuiltinBloomFilter";
   }
 
-  //bloom过滤规则dst，dst作bloom过滤
+  // bloom过滤规则dst，dst作bloom过滤
+  // double hash
+
+  // bloom过滤器结果放在每个sst文件中持久化
+
   virtual void CreateFilter(const Slice* keys, int n, std::string* dst) const {
     // Compute bloom filter size (in both bits and bytes)
     size_t bits = n * bits_per_key_;
@@ -65,6 +69,9 @@ class BloomFilterPolicy : public FilterPolicy {
 
   //通过bloom过滤器快速判断
   //某个key是否有可能在bloom_filter中
+
+  //在某个sst文件的bloom filter上记录
+  
   virtual bool KeyMayMatch(const Slice& key, const Slice& bloom_filter) const {
     const size_t len = bloom_filter.size();
     if (len < 2) return false;

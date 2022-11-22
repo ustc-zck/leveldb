@@ -51,6 +51,7 @@ class TableCache {
   Env* const env_;
   const std::string dbname_;
   const Options* options_;
+  // sst文件句柄的cache， 避免多次文件打开
   Cache* cache_;
 
   Status FindTable(uint64_t file_number, uint64_t file_size, Cache::Handle**);

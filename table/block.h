@@ -36,6 +36,7 @@ class Block {
   Block(const Block&);
   void operator=(const Block&);
 
+  //内部定义
   class Iter;
 };
 

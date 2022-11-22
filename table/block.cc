@@ -161,6 +161,8 @@ class Block::Iter : public Iterator {
     } while (ParseNextKey() && NextEntryOffset() < original);
   }
 
+  // 1. block迭代器
+  // 2. 寻找restart point，然后进行迭代
   virtual void Seek(const Slice& target) {
     // Binary search in restart array to find the first restart point
     // with a key >= target

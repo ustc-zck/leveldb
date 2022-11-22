@@ -107,6 +107,8 @@ inline ValueType ExtractValueType(const Slice& internal_key) {
 
 // A comparator for internal keys that uses a specified comparator for
 // the user key portion and breaks ties by decreasing sequence number.
+
+// 内部key封装，从Slice中抽取出用户key, 然后根据指定的comparator进行比较
 class InternalKeyComparator : public Comparator {
  private:
   const Comparator* user_comparator_;
@@ -125,6 +127,8 @@ class InternalKeyComparator : public Comparator {
 };
 
 // Filter policy wrapper that converts from internal keys to user keys
+
+// 对抽取出来的内部key做Filter过滤
 class InternalFilterPolicy : public FilterPolicy {
  private:
   const FilterPolicy* const user_policy_;

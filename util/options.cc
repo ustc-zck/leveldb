@@ -9,6 +9,7 @@
 
 namespace leveldb {
 
+// 默认options
 Options::Options()
     : comparator(BytewiseComparator()),
       create_if_missing(false),

@@ -151,6 +151,8 @@ static void ReleaseBlock(void* arg, void* h) {
 
 // Convert an index iterator value (i.e., an encoded BlockHandle)
 // into an iterator over the contents of the corresponding block.
+
+//首先读cache，然后读block
 Iterator* Table::BlockReader(void* arg,
                              const ReadOptions& options,
                              const Slice& index_value) {
@@ -172,10 +174,13 @@ Iterator* Table::BlockReader(void* arg,
       EncodeFixed64(cache_key_buffer, table->rep_->cache_id);
       EncodeFixed64(cache_key_buffer+8, handle.offset());
       Slice key(cache_key_buffer, sizeof(cache_key_buffer));
+      // block cache
+      // 读cache
       cache_handle = block_cache->Lookup(key);
       if (cache_handle != NULL) {
         block = reinterpret_cast<Block*>(block_cache->Value(cache_handle));
       } else {
+        //读block文件
         s = ReadBlock(table->rep_->file, options, handle, &contents);
         if (s.ok()) {
           block = new Block(contents);
@@ -213,7 +218,7 @@ Iterator* Table::NewIterator(const ReadOptions& options) const {
       &Table::BlockReader, const_cast<Table*>(this), options);
 }
 
-//读文件
+// 读文件
 Status Table::InternalGet(const ReadOptions& options, const Slice& k,
                           void* arg,
                           void (*saver)(void*, const Slice&, const Slice&)) {
@@ -230,6 +235,7 @@ Status Table::InternalGet(const ReadOptions& options, const Slice& k,
       // Not found
     } else {
       Slice handle = iiter->value();
+
       Iterator* block_iter = BlockReader(this, options, iiter->value());
       block_iter->Seek(k);
       if (block_iter->Valid()) {
