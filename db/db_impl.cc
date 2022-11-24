@@ -1016,6 +1016,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       compact->current_output()->largest.DecodeFrom(key);
 
       //将迭代的kv加到builder中，以生成新文件
+      
       compact->builder->Add(key, input->value());
 
       // Close output file if it is big enough
